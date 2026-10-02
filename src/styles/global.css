@@ -1,0 +1,5 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* Design tokens (fonts, colors, spacing) go in an @theme block here
+   once the visual design is decided. */
