@@ -79,17 +79,8 @@ export function isValidPieceId(id: string): boolean {
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id);
 }
 
-/**
- * Folders under content/work that hold media files but have no piece.
- * `filePaths` look like "/content/work/<folder>/<file>".
- */
-export function orphanFolders(
-  filePaths: string[],
-  pieceIds: string[],
-): string[] {
+/** Folder names under content/work that have no piece, sorted. */
+export function orphanFolders(folders: string[], pieceIds: string[]): string[] {
   const known = new Set(pieceIds);
-  const folders = new Set(
-    filePaths.map((path) => path.split("/").at(-2) ?? ""),
-  );
-  return [...folders].filter((folder) => !known.has(folder)).sort();
+  return folders.filter((folder) => !known.has(folder)).sort();
 }

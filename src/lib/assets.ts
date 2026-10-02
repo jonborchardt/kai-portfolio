@@ -1,3 +1,4 @@
+import { existsSync, readdirSync } from "node:fs";
 import type { ImageMetadata } from "astro";
 import type { CollectionEntry } from "astro:content";
 import { embedUrl, mediaKind, orphanFolders } from "./media";
@@ -65,15 +66,19 @@ export function coverImage(
     : undefined;
 }
 
-/** Fails the build when a folder holds media but its index.md is missing or misnamed. */
+/** Fails the build when a folder in content/work has no index.md, or a misnamed one. */
 export function assertNoOrphanFolders(pieceIds: string[]): void {
-  const orphans = orphanFolders(
-    [...Object.keys(images), ...Object.keys(files)],
-    pieceIds,
-  );
+  // Read from disk rather than the globs above, so a piece with only a video
+  // link, or only unsupported files, is still seen.
+  const folders = existsSync("content/work")
+    ? readdirSync("content/work", { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => entry.name)
+    : [];
+  const orphans = orphanFolders(folders, pieceIds);
   if (orphans.length > 0) {
     throw new Error(
-      `These folders in content/work have media files but no index.md, so they would not appear on the site: ${orphans.join(", ")}. ` +
+      `These folders in content/work have no index.md, so they would not appear on the site: ${orphans.join(", ")}. ` +
         `Each piece needs a file named exactly "index.md".`,
     );
   }

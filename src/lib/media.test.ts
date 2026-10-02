@@ -153,23 +153,15 @@ describe("isValidPieceId", () => {
 });
 
 describe("orphanFolders", () => {
-  test("folders with media but no piece are reported once each, sorted", () => {
-    const files = [
-      "/content/work/koi-pond/cover.jpg",
-      "/content/work/koi-pond/detail.jpg",
-      "/content/work/no-index/a.jpg",
-      "/content/work/no-index/b.mp3",
-      "/content/work/also-missing/a.png",
-    ];
-    expect(orphanFolders(files, ["koi-pond"])).toEqual([
-      "also-missing",
-      "no-index",
-    ]);
+  test("folders that have no piece are reported, sorted", () => {
+    expect(
+      orphanFolders(["koi-pond", "no-index", "also-missing"], ["koi-pond"]),
+    ).toEqual(["also-missing", "no-index"]);
   });
 
   test("no orphans when every folder has a piece", () => {
     expect(
-      orphanFolders(["/content/work/koi-pond/cover.jpg"], ["koi-pond"]),
+      orphanFolders(["koi-pond", "nocturne"], ["nocturne", "koi-pond"]),
     ).toEqual([]);
   });
 });
