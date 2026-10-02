@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Option 2: Darkroom</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0b0b0c;
+        --panel: #151517;
+        --stage: #000000;
+        --text: #eeece6;
+        --muted: #8b8a85;
+        --accent: #ffb224;
+        --glass: rgba(11, 11, 12, 0.8);
+        --display: "Bebas Neue", Impact, sans-serif;
+        color-scheme: dark;
+      }
+      [data-theme="light"] {
+        --bg: #f2f1ee;
+        --panel: #e2e0da;
+        --stage: #dddbd4;
+        --text: #151515;
+        --muted: #66655f;
+        --accent: #b86a00;
+        --glass: rgba(242, 241, 238, 0.85);
+        color-scheme: light;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font: 15px/1.6 Inter, system-ui, sans-serif;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button {
+        font: inherit;
+        color: inherit;
+        background: none;
+        border: 0;
+        cursor: pointer;
+      }
+      img {
+        display: block;
+      }
+      .caps {
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+
+      .top {
+        position: absolute;
+        inset: 0 0 auto;
+        z-index: 6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 24px;
+      }
+      /* Over the hero image the header is always white. */
+      body[data-view="home"] .top {
+        color: #fff;
+      }
+      .name {
+        font: 30px/1 var(--display);
+        letter-spacing: 0.06em;
+      }
+      .top nav {
+        display: flex;
+        gap: 28px;
+        align-items: center;
+      }
+      body[data-view="home"] .top nav a[href="#"],
+      body[data-view="about"] .top nav a[href="#/about"] {
+        color: var(--accent);
+      }
+      #theme {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(128, 128, 128, 0.25);
+        backdrop-filter: blur(8px);
+      }
+      #theme:hover {
+        color: var(--accent);
+      }
+
+      .hero {
+        position: relative;
+        display: block;
+        height: 78vh;
+        min-height: 440px;
+        color: #fff;
+        overflow: hidden;
+      }
+      .hero img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(rgba(0, 0, 0, 0.5), transparent 30%, transparent 45%, rgba(0, 0, 0, 0.85));
+      }
+      .over {
+        position: absolute;
+        z-index: 1;
+        inset: auto 24px 32px;
+      }
+      .over h1 {
+        font: clamp(64px, 12vw, 168px) / 0.88 var(--display);
+        margin: 10px 0 14px;
+      }
+      .over .go {
+        color: #ffb224;
+      }
+
+      .bar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 24px;
+        background: var(--glass);
+        backdrop-filter: blur(12px);
+      }
+      .bar h2 {
+        font: 26px/1 var(--display);
+        letter-spacing: 0.06em;
+      }
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .filters button {
+        padding: 6px 14px;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--text) 25%, transparent);
+        font-size: 13px;
+      }
+      .filters span {
+        color: var(--muted);
+        margin-left: 2px;
+      }
+      .filters button[aria-pressed="true"] {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #0b0b0c;
+        font-weight: 600;
+      }
+      .filters button[aria-pressed="true"] span {
+        color: inherit;
+      }
+
+      .mosaic {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-auto-rows: 200px;
+        grid-auto-flow: dense;
+        gap: 4px;
+        padding: 4px;
+      }
+      .tile {
+        position: relative;
+        overflow: hidden;
+        background: var(--panel);
+      }
+      .tile.wide {
+        grid-column: span 2;
+      }
+      .tile.tall {
+        grid-row: span 2;
+      }
+      .tile.big {
+        grid-column: span 2;
+        grid-row: span 2;
+      }
+      .tile img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition:
+          transform 0.6s,
+          filter 0.3s;
+      }
+      .tile:hover img,
+      .tile:focus-visible img {
+        transform: scale(1.04);
+        filter: brightness(0.5);
+      }
+      .cap {
+        position: absolute;
+        inset: auto 0 0;
+        padding: 14px;
+        color: #fff;
+        opacity: 0;
+        transform: translateY(8px);
+        transition: 0.25s;
+      }
+      .cap b {
+        display: block;
+        font: 26px/1 var(--display);
+        letter-spacing: 0.03em;
+      }
+      .cap i {
+        font-style: normal;
+        font-size: 12px;
+        color: #ffb224;
+      }
+      .tile:hover .cap,
+      .tile:focus-visible .cap {
+        opacity: 1;
+        transform: none;
+      }
+      @media (hover: none) {
+        .cap {
+          opacity: 1;
+          transform: none;
+          background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
+        }
+      }
+      .badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+      }
+
+      .stage {
+        display: grid;
+        place-items: center;
+        padding: 92px 24px 32px;
+        background: var(--stage);
+      }
+      .stage img {
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 78vh;
+      }
+      .info {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 48px;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 24px 64px;
+      }
+      .info h1 {
+        font: clamp(52px, 8vw, 112px) / 0.9 var(--display);
+      }
+      .info dl {
+        display: grid;
+        grid-template-columns: 90px 1fr;
+        gap: 6px 16px;
+        margin-bottom: 20px;
+      }
+      .info dt {
+        color: var(--accent);
+        padding-top: 3px;
+      }
+      .info p + p {
+        margin-top: 12px;
+      }
+      .info .links {
+        color: var(--accent);
+      }
+      .portrait {
+        width: 100%;
+        height: auto;
+        max-width: 420px;
+        aspect-ratio: 4 / 5;
+        object-fit: cover;
+      }
+      .pn {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+        padding: 4px;
+      }
+      .pn a {
+        position: relative;
+        height: 180px;
+        overflow: hidden;
+        color: #fff;
+      }
+      .pn img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: brightness(0.4);
+        transition: filter 0.3s;
+      }
+      .pn a:hover img {
+        filter: brightness(0.6);
+      }
+      .pn span {
+        position: absolute;
+        inset: auto 20px 18px;
+      }
+      .pn b {
+        display: block;
+        font: 34px/1 var(--display);
+        margin-top: 4px;
+      }
+      footer {
+        padding: 40px 24px 88px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      @media (max-width: 760px) {
+        .top nav {
+          gap: 16px;
+        }
+        .mosaic {
+          grid-template-columns: repeat(2, 1fr);
+          grid-auto-rows: 44vw;
+        }
+        .info {
+          grid-template-columns: 1fr;
+          gap: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <a class="name" href="#">Kai's Portfolio</a>
+      <nav aria-label="Main" class="caps">
+        <a href="#">Work</a>
+        <a href="#/about">About</a>
+        <button id="theme" type="button"></button>
+      </nav>
+    </header>
+    <main id="app"></main>
+    <footer class="caps">© 2026 Kai Borchardt</footer>
+
+    <script src="shared.js"></script>
+    <script>
+      const app = document.getElementById("app");
+
+      // Every 11th tile is a big one; the rest take one or two cells to suit their shape.
+      const shape = (p, i) => (i % 11 === 0 ? "big" : p.w / p.h > 1.3 ? "wide" : p.w / p.h < 0.85 ? "tall" : "");
+      const tile = (p, i) => `
+        <a class="tile ${shape(p, i)}" href="#/work/${p.id}">
+          <img src="${p.src}" alt="" loading="lazy">${badge(p)}
+          <span class="cap"><b>${p.title}</b><i>${LABEL[p.type]} · ${p.date}</i></span>
+        </a>`;
+
+      function home() {
+        const feature = PIECES.find((p) => p.w > p.h);
+        app.innerHTML = `
+          <a class="hero" href="#/work/${feature.id}">
+            <img src="${feature.src}" alt="">
+            <div class="over">
+              <p class="caps">Featured · ${LABEL[feature.type]} · ${feature.date}</p>
+              <h1>${feature.title}</h1>
+              <span class="caps go">View piece →</span>
+            </div>
+          </a>
+          <div class="bar"><h2>All work</h2><nav class="filters" aria-label="Filter by type"></nav></div>
+          <div class="mosaic"></div>`;
+        filters(app.querySelector(".filters"), (list) => {
+          app.querySelector(".mosaic").innerHTML = list.map(tile).join("");
+        });
+      }
+
+      function piece(p) {
+        const { prev, next } = near(p);
+        const step = (q, word) =>
+          q
+            ? `<a href="#/work/${q.id}"><img src="${q.src}" alt=""><span><i class="caps">${word}</i><b>${q.title}</b></span></a>`
+            : `<a href="#"><span><i class="caps">Back to</i><b>All work</b></span></a>`;
+        app.innerHTML = `
+          <article>
+            <div class="stage"><img src="${p.src}" alt="${p.title}" width="${p.w * 2}" height="${p.h * 2}"></div>
+            <div class="info">
+              <h1>${p.title}</h1>
+              <div>
+                <dl>
+                  <dt class="caps">Type</dt><dd>${LABEL[p.type]}</dd>
+                  <dt class="caps">Medium</dt><dd>${p.medium}</dd>
+                  <dt class="caps">Date</dt><dd>${p.date}</dd>
+                </dl>
+                <p>${BLURB}</p>
+              </div>
+            </div>
+          </article>
+          <nav class="pn" aria-label="More work">${step(prev, "Newer")}${step(next, "Older")}</nav>`;
+      }
+
+      function about() {
+        app.innerHTML = `
+          <article class="info" style="padding-top: 120px">
+            <img class="portrait" src="${face("#2a2a2e", "#5a5960")}" alt="Placeholder for a photo of Kai">
+            <div>
+              <h1>Kai Borchardt</h1>
+              <p style="margin-top: 20px">${BIO.join("</p><p>")}</p>
+              <p class="caps links">${CONTACT.map((c) => `<a href="#/about">${c}</a>`).join(" &nbsp;/&nbsp; ")}</p>
+            </div>
+          </article>`;
+      }
+
+      route({ home, piece, about });
+    </script>
+  </body>
+</html>

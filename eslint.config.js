@@ -10,6 +10,7 @@ export default defineConfig(
     ".astro/",
     "content/",
     "docs/",
+    "public/design-options/",
     "playwright-report/",
     "test-results/",
   ]),

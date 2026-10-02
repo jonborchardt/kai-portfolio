@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Design options for Kai's Portfolio</title>
+    <style>
+      :root {
+        --bg: #f5f5f4;
+        --panel: #ffffff;
+        --ink: #1a1a1a;
+        --muted: #6b6b6b;
+        --line: #dcdcda;
+        color-scheme: light dark;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #131313;
+          --panel: #1e1e1e;
+          --ink: #f0f0f0;
+          --muted: #9a9a9a;
+          --line: #333333;
+        }
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font: 16px/1.55 system-ui, sans-serif;
+        padding: 40px clamp(16px, 4vw, 56px) 80px;
+      }
+      a {
+        color: inherit;
+      }
+      h1 {
+        font-size: clamp(28px, 4vw, 44px);
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+      }
+      .intro {
+        max-width: 68ch;
+        margin: 12px 0 40px;
+        color: var(--muted);
+      }
+      .option {
+        display: grid;
+        grid-template-columns: minmax(0, 2.3fr) minmax(240px, 1fr);
+        gap: 28px;
+        padding: 24px;
+        margin-bottom: 28px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+      }
+      .shots {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .shot {
+        position: relative;
+        display: block;
+        aspect-ratio: 16 / 10;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      .shot:hover,
+      .shot:focus-visible {
+        outline: 3px solid var(--ink);
+        outline-offset: 2px;
+      }
+      .shot iframe {
+        width: 1280px;
+        height: 800px;
+        border: 0;
+        transform-origin: 0 0;
+        transform: scale(var(--s, 0.3));
+        pointer-events: none;
+      }
+      .shot span {
+        position: absolute;
+        left: 8px;
+        bottom: 8px;
+        padding: 2px 10px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.75);
+        color: #fff;
+        font-size: 12px;
+      }
+      h2 {
+        font-size: 26px;
+        letter-spacing: -0.01em;
+      }
+      h2 small {
+        color: var(--muted);
+        font-weight: 400;
+      }
+      .vibe {
+        margin: 6px 0 14px;
+      }
+      .swatches {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 14px;
+      }
+      .swatches i {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 1px solid var(--line);
+      }
+      dl {
+        font-size: 14px;
+      }
+      dt {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .go {
+        display: inline-block;
+        margin-top: 16px;
+        padding: 8px 18px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: var(--bg);
+        font-weight: 600;
+        text-decoration: none;
+      }
+      @media (max-width: 900px) {
+        .option {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Five directions for Kai's Portfolio</h1>
+    <p class="intro">
+      Every option shows the same 48 made-up pieces, so the only thing that changes is the design. The artwork and the
+      portrait are stand-ins. Open one and click around: the filters, the piece pages, the About page and the light/dark
+      button all work, and the bar at the bottom steps to the next option. Then say which numbers to keep.
+    </p>
+    <main id="options"></main>
+
+    <script>
+      const OPTIONS = [
+        {
+          file: "1-gallery-wall.html",
+          name: "Gallery Wall",
+          vibe: "A quiet museum wall. Each piece hangs in a white mat at its real shape, with a small label under it.",
+          colors: ["#f4f1ea", "#ffffff", "#1c1b19", "#7a756b", "#1b1a18"],
+          fonts: "Cormorant Garamond, Inter",
+          good: "Paintings and drawings. Nothing is cropped, and nothing competes with the art.",
+          watch: "The calmest of the five, so the least personality. About four pieces per screen.",
+        },
+        {
+          file: "2-darkroom.html",
+          name: "Darkroom",
+          vibe: "Cinema dark. A full-width featured piece, then a wall-to-wall mosaic with titles on hover.",
+          colors: ["#0b0b0c", "#151517", "#eeece6", "#ffb224", "#f2f1ee"],
+          fonts: "Bebas Neue, Inter",
+          good: "Photos and video. Shows the most pieces per screen, so it suits a big collection.",
+          watch: "Thumbnails are cropped to fit the mosaic. Pale, delicate drawings can look harsh on black.",
+        },
+        {
+          file: "3-zine.html",
+          name: "Zine",
+          vibe: "Loud and hand-made. Sticker buttons, tilted cards, hard shadows, a color for each kind of work.",
+          colors: ["#fff4dc", "#1d1a3a", "#ff4d8d", "#4d6bff", "#ffd43b", "#16c784"],
+          fonts: "Bricolage Grotesque, Space Mono",
+          good: "Personality. The type of each piece is obvious at a glance.",
+          watch: "The frame is as loud as the art. Thumbnails are cropped square.",
+        },
+        {
+          file: "4-index.html",
+          name: "Index",
+          vibe: "A typographic archive. Every piece is numbered in a list by year, with a contact-sheet view.",
+          colors: ["#ffffff", "#0f0f0f", "#767676", "#ff3d00", "#0e0e0e"],
+          fonts: "Inter Tight, IBM Plex Mono",
+          good: "Hundreds of pieces. Easy to scan and find things, and nothing is cropped.",
+          watch: "Images are small until you point at a row or open a piece.",
+        },
+        {
+          file: "5-studio.html",
+          name: "Studio",
+          vibe: "Warm and friendly. A hello from Kai, then a scrolling shelf for each kind of work.",
+          colors: ["#f3e8d8", "#fffaf1", "#3a2a20", "#c9573c", "#3f8483", "#e2a12f", "#6f7d3c"],
+          fonts: "Fraunces, Karla",
+          good: "Mixed media: art, photos, video and music each get their own space.",
+          watch: "No single newest-first view of everything. Shelves scroll sideways.",
+        },
+      ];
+
+      document.getElementById("options").innerHTML = OPTIONS.map(
+        (o, i) => `
+        <section class="option">
+          <div class="shots">
+            ${["light", "dark"]
+              .map(
+                (mode) => `
+              <a class="shot" href="${o.file}?theme=${mode}" aria-label="Open ${o.name} in ${mode} mode">
+                <iframe src="${o.file}?theme=${mode}" title="${o.name}, ${mode} mode" loading="lazy" tabindex="-1"></iframe>
+                <span>${mode}</span>
+              </a>`,
+              )
+              .join("")}
+          </div>
+          <div>
+            <h2><small>${i + 1}</small> ${o.name}</h2>
+            <p class="vibe">${o.vibe}</p>
+            <div class="swatches">${o.colors.map((c) => `<i style="background: ${c}" title="${c}"></i>`).join("")}</div>
+            <dl>
+              <dt>Fonts</dt><dd>${o.fonts}</dd>
+              <dt>Good at</dt><dd>${o.good}</dd>
+              <dt>Watch out</dt><dd>${o.watch}</dd>
+            </dl>
+            <a class="go" href="${o.file}">Open option ${i + 1} →</a>
+          </div>
+        </section>`,
+      ).join("");
+
+      // Each preview is a full 1280px page scaled down to fit its box.
+      const fit = new ResizeObserver((entries) => {
+        for (const entry of entries) entry.target.style.setProperty("--s", entry.contentRect.width / 1280);
+      });
+      for (const shot of document.querySelectorAll(".shot")) fit.observe(shot);
+    </script>
+  </body>
+</html>

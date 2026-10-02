@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Option 4: Index</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter+Tight:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #ffffff;
+        --ink: #0f0f0f;
+        --muted: #767676;
+        --soft: #e4e4e4;
+        --well: #f3f3f3;
+        --accent: #ff3d00;
+        --mono: "IBM Plex Mono", ui-monospace, monospace;
+        --sans: "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+      }
+      [data-theme="dark"] {
+        --bg: #0e0e0e;
+        --ink: #f2f2f2;
+        --muted: #8c8c8c;
+        --soft: #2a2a2a;
+        --well: #191919;
+        --accent: #ff5a26;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font: 12px/1.5 var(--mono);
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button {
+        font: inherit;
+        color: inherit;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        text-transform: inherit;
+        letter-spacing: inherit;
+      }
+      img {
+        display: block;
+      }
+      sup {
+        font: 500 0.3em var(--mono);
+        color: var(--accent);
+        vertical-align: top;
+        margin-left: 0.3em;
+        letter-spacing: 0;
+      }
+
+      .top,
+      .tools {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 32px;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 24px;
+        border-bottom: 1px solid var(--ink);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .who {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        font-weight: 500;
+      }
+      .who img {
+        width: 26px;
+        height: 26px;
+      }
+      .top .mid {
+        color: var(--muted);
+      }
+      .top nav {
+        display: flex;
+        gap: 24px;
+        align-items: center;
+      }
+      body[data-view="home"] .top nav a[href="#"],
+      body[data-view="about"] .top nav a[href="#/about"] {
+        color: var(--accent);
+      }
+      #theme {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--ink);
+      }
+      #theme svg {
+        width: 16px;
+        height: 16px;
+      }
+      #theme:hover,
+      .row:hover,
+      .row:focus-visible {
+        background: var(--ink);
+        color: var(--bg);
+      }
+
+      .head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 24px;
+        align-items: end;
+        padding: 56px 24px 32px;
+      }
+      h1 {
+        font: 600 clamp(64px, 13vw, 190px) / 0.82 var(--sans);
+        letter-spacing: -0.05em;
+      }
+      .head p {
+        font-size: 13px;
+        max-width: 34ch;
+      }
+      .tools {
+        border-top: 1px solid var(--ink);
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: var(--bg);
+      }
+      .filters,
+      .views {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 22px;
+      }
+      :is(.filters, .views) button::before {
+        content: "○ ";
+      }
+      :is(.filters, .views) button[aria-pressed="true"]::before {
+        content: "● ";
+        color: var(--accent);
+      }
+      .filters span {
+        color: var(--muted);
+      }
+
+      .year {
+        font: 600 56px/1 var(--sans);
+        letter-spacing: -0.04em;
+        padding: 40px 24px 12px;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 52px 44px minmax(0, 2fr) 90px minmax(0, 1.4fr) 90px;
+        gap: 16px;
+        align-items: center;
+        padding: 8px 24px;
+        border-top: 1px solid var(--soft);
+      }
+      .row .no,
+      .cell .no {
+        color: var(--accent);
+      }
+      .row img {
+        width: 44px;
+        height: 44px;
+        object-fit: cover;
+      }
+      .row b {
+        font: 500 20px/1.2 var(--sans);
+        letter-spacing: -0.01em;
+      }
+      .row :last-child {
+        text-align: right;
+      }
+      #peek {
+        position: fixed;
+        z-index: 20;
+        width: 260px;
+        height: auto;
+        max-height: 300px;
+        object-fit: contain;
+        pointer-events: none;
+        background: var(--bg);
+        border: 1px solid var(--ink);
+      }
+      @media (hover: none) {
+        #peek {
+          display: none;
+        }
+      }
+
+      .sheet {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 24px 16px;
+        padding: 24px;
+      }
+      .well {
+        display: grid;
+        place-items: center;
+        aspect-ratio: 1;
+        padding: 10px;
+        margin-bottom: 6px;
+        background: var(--well);
+      }
+      .well img {
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 100%;
+      }
+      .cell:hover .well {
+        outline: 1px solid var(--ink);
+      }
+
+      .doc {
+        display: grid;
+        grid-template-columns: 360px minmax(0, 1fr);
+      }
+      .doc aside {
+        position: sticky;
+        top: 0;
+        align-self: start;
+        padding: 32px 24px;
+      }
+      .doc h1 {
+        font-size: clamp(40px, 4.4vw, 64px);
+        line-height: 0.95;
+        letter-spacing: -0.035em;
+        margin: 8px 0 28px;
+      }
+      .doc dl {
+        display: grid;
+        grid-template-columns: 80px 1fr;
+        border-bottom: 1px solid var(--soft);
+        margin-bottom: 20px;
+      }
+      .doc :is(dt, dd) {
+        padding: 6px 0;
+        border-top: 1px solid var(--soft);
+      }
+      .doc dt {
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+      .doc p {
+        font-size: 13px;
+        margin-bottom: 12px;
+      }
+      .doc dd a,
+      .pn a:hover {
+        text-decoration: underline;
+      }
+      .pn {
+        display: grid;
+        gap: 6px;
+        margin-top: 32px;
+        text-transform: uppercase;
+      }
+      .plate {
+        display: grid;
+        place-items: center;
+        min-height: calc(100vh - 57px);
+        padding: 40px;
+        background: var(--well);
+        border-left: 1px solid var(--ink);
+      }
+      .plate img {
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 84vh;
+      }
+      footer {
+        padding: 16px 24px 80px;
+        border-top: 1px solid var(--ink);
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+
+      @media (max-width: 760px) {
+        .top .mid,
+        .row span:not(.no, :last-child) {
+          display: none;
+        }
+        .head,
+        .doc {
+          grid-template-columns: 1fr;
+        }
+        .row {
+          grid-template-columns: 30px 44px minmax(0, 1fr) auto;
+          gap: 12px;
+        }
+        .doc aside {
+          position: static;
+        }
+        .plate {
+          min-height: 0;
+          padding: 20px;
+          border-left: 0;
+          border-top: 1px solid var(--ink);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <a class="who" href="#"><img id="me" alt="" width="400" height="400" />Kai Borchardt</a>
+      <span class="mid">Portfolio, 2023–2026</span>
+      <nav aria-label="Main">
+        <a href="#">Index</a>
+        <a href="#/about">About</a>
+        <button id="theme" type="button"></button>
+      </nav>
+    </header>
+    <main id="app"></main>
+    <footer>© 2026 Kai Borchardt</footer>
+
+    <script src="shared.js"></script>
+    <script>
+      const app = document.getElementById("app");
+      const portrait = face("#d9d9d9", "#9a9a9a");
+      document.getElementById("me").src = portrait;
+      let view = "list";
+
+      const row = (p) => `
+        <a class="row" href="#/work/${p.id}" data-id="${p.id}">
+          <span class="no">${p.n}</span>
+          <img src="${p.src}" alt="" loading="lazy">
+          <b>${p.title}</b>
+          <span>${LABEL[p.type]}</span>
+          <span>${p.medium}</span>
+          <span>${p.date}</span>
+        </a>`;
+      const cell = (p) => `
+        <a class="cell" href="#/work/${p.id}">
+          <span class="well"><img src="${p.src}" alt="" width="${p.w}" height="${p.h}" loading="lazy"></span>
+          <span class="no">${p.n}</span> ${p.title}
+        </a>`;
+
+      function listing(list) {
+        let year;
+        let out = "";
+        for (const p of list) {
+          if (p.year !== year) {
+            year = p.year;
+            out += `<h2 class="year">${year}<sup>${list.filter((q) => q.year === year).length}</sup></h2>`;
+          }
+          out += row(p);
+        }
+        return out;
+      }
+
+      function home() {
+        app.innerHTML = `
+          <section class="head">
+            <h1>Work<sup>${PIECES.length}</sup></h1>
+            <p>Everything Kai has made, newest first: artwork, photographs, video and music.</p>
+          </section>
+          <div class="tools">
+            <nav class="filters" aria-label="Filter by type"></nav>
+            <div class="views" role="group" aria-label="Layout">
+              <button type="button" data-as="list">List</button>
+              <button type="button" data-as="sheet">Contact sheet</button>
+            </div>
+          </div>
+          <div id="out"></div>
+          <img id="peek" alt="" hidden>`;
+        const out = document.getElementById("out");
+        const peek = document.getElementById("peek");
+        let shown = PIECES;
+        const draw = () => {
+          for (const b of app.querySelectorAll(".views button")) b.setAttribute("aria-pressed", b.dataset.as === view);
+          out.className = view;
+          out.innerHTML = view === "list" ? listing(shown) : shown.map(cell).join("");
+        };
+        app.querySelector(".views").onclick = (event) => {
+          view = event.target.dataset.as ?? view;
+          draw();
+        };
+        filters(app.querySelector(".filters"), (list) => {
+          shown = list;
+          draw();
+        });
+
+        // In the list, a larger preview follows the pointer.
+        out.onmousemove = (event) => {
+          const p = PIECES.find((q) => q.id === event.target.closest(".row")?.dataset.id);
+          peek.hidden = !p;
+          if (!p) return;
+          if (peek.dataset.id !== p.id) {
+            peek.dataset.id = p.id;
+            peek.src = p.src;
+          }
+          peek.style.left = `${Math.min(event.clientX + 28, innerWidth - 290)}px`;
+          peek.style.top = `${Math.min(event.clientY + 20, innerHeight - 320)}px`;
+        };
+        out.onmouseleave = () => (peek.hidden = true);
+      }
+
+      function piece(p) {
+        const { prev, next } = near(p);
+        app.innerHTML = `
+          <article class="doc">
+            <aside>
+              <p class="no" style="color: var(--accent)">No. ${p.n}</p>
+              <h1>${p.title}</h1>
+              <dl>
+                <dt>Type</dt><dd>${LABEL[p.type]}</dd>
+                <dt>Medium</dt><dd>${p.medium}</dd>
+                <dt>Date</dt><dd>${p.date}</dd>
+              </dl>
+              <p>${BLURB}</p>
+              <nav class="pn" aria-label="More work">
+                ${prev ? `<a href="#/work/${prev.id}">← ${prev.n} ${prev.title}</a>` : ""}
+                ${next ? `<a href="#/work/${next.id}">→ ${next.n} ${next.title}</a>` : ""}
+                <a href="#">↑ Index</a>
+              </nav>
+            </aside>
+            <div class="plate"><img src="${p.src}" alt="${p.title}" width="${p.w * 2}" height="${p.h * 2}"></div>
+          </article>`;
+      }
+
+      function about() {
+        app.innerHTML = `
+          <article class="doc">
+            <aside>
+              <p style="color: var(--accent)">About</p>
+              <h1>Kai Borchardt</h1>
+              <dl>
+                <dt>Makes</dt><dd>Art, photographs, video, music</dd>
+                <dt>Pieces</dt><dd>${PIECES.length}</dd>
+                <dt>Since</dt><dd>2023</dd>
+                <dt>Contact</dt><dd>${CONTACT.map((c) => `<a href="#/about">${c}</a>`).join(", ")}</dd>
+              </dl>
+              <p>${BIO.join("</p><p>")}</p>
+            </aside>
+            <div class="plate"><img src="${portrait}" alt="Placeholder for a photo of Kai" width="400" height="400"></div>
+          </article>`;
+      }
+
+      route({ home, piece, about });
+    </script>
+  </body>
+</html>
