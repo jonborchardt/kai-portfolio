@@ -1,10 +1,10 @@
 ---
-import { Content } from "../../content/about.md";
+import { Content, frontmatter } from "../../content/about.md";
 import Base from "../layouts/Base.astro";
 ---
 
-<Base title="About">
-  <article class="prose">
+<Base title="About" description={frontmatter.description}>
+  <article class="prose dark:prose-invert">
     <Content />
   </article>
 </Base>

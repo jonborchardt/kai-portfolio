@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest";
 import {
+  byNewest,
   embedUrl,
+  formatMonthYear,
   isValidPieceId,
   mediaKind,
-  orphanFolders,
   parseDate,
 } from "./media";
 
@@ -27,9 +28,10 @@ describe("mediaKind", () => {
     expect(mediaKind(src)).toBe(kind);
   });
 
-  test("upper-case extensions from cameras and phones are accepted", () => {
+  test("extensions in any letter case are accepted", () => {
     expect(mediaKind("IMG_1234.JPG")).toBe("image");
     expect(mediaKind("MOV_0001.MP4")).toBe("video");
+    expect(mediaKind("Photo.Jpg")).toBe("image");
   });
 
   test("file names with extra dots use the last extension", () => {
@@ -61,6 +63,8 @@ describe("embedUrl", () => {
     "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
     "https://www.youtube.com/watch?v=aqz-KE-bpKQ&t=42s",
     "https://m.youtube.com/watch?v=aqz-KE-bpKQ",
+    "https://music.youtube.com/watch?v=aqz-KE-bpKQ",
+    "https://www.youtube.com/live/aqz-KE-bpKQ",
     "https://youtube.com/shorts/aqz-KE-bpKQ",
     "https://www.youtube.com/embed/aqz-KE-bpKQ",
     "http://youtu.be/aqz-KE-bpKQ",
@@ -68,14 +72,20 @@ describe("embedUrl", () => {
     expect(embedUrl(src)).toBe(youtube);
   });
 
-  test("public Vimeo link", () => {
-    expect(embedUrl("https://vimeo.com/76979871")).toBe(
-      "https://player.vimeo.com/video/76979871",
-    );
+  test.each([
+    "https://vimeo.com/76979871",
+    "https://vimeo.com/manage/videos/76979871",
+    "https://player.vimeo.com/video/76979871",
+  ])("public Vimeo link %s", (src) => {
+    expect(embedUrl(src)).toBe("https://player.vimeo.com/video/76979871");
   });
 
-  test("unlisted Vimeo link keeps its privacy hash", () => {
-    expect(embedUrl("https://vimeo.com/76979871/0a1b2c3d4e")).toBe(
+  test.each([
+    "https://vimeo.com/76979871/0a1b2c3d4e",
+    "https://vimeo.com/manage/videos/76979871/0a1b2c3d4e",
+    "https://player.vimeo.com/video/76979871?h=0a1b2c3d4e",
+  ])("unlisted Vimeo link %s keeps its privacy hash", (src) => {
+    expect(embedUrl(src)).toBe(
       "https://player.vimeo.com/video/76979871?h=0a1b2c3d4e",
     );
   });
@@ -116,6 +126,8 @@ describe("parseDate", () => {
     "2024",
     "March 2026",
     "2026-13",
+    "2026-02-31",
+    "2025-02-29",
     "03-2026",
     "",
     null,
@@ -127,6 +139,35 @@ describe("parseDate", () => {
   test("an invalid Date is rejected", () => {
     expect(parseDate(new Date("nonsense"))).toBeUndefined();
   });
+
+  test("a leap day is accepted", () => {
+    expect(parseDate("2024-02-29")?.toISOString()).toBe(
+      "2024-02-29T00:00:00.000Z",
+    );
+  });
+});
+
+test("formatMonthYear uses UTC, so the first of a month stays in that month", () => {
+  expect(formatMonthYear(new Date("2026-03-01T00:00:00Z"))).toBe("March 2026");
+});
+
+test("byNewest puts the newest first, and orders the same date by folder name", () => {
+  const piece = (id: string, date: string) => ({
+    id,
+    data: { date: new Date(date) },
+  });
+  const pieces = [
+    piece("b-old", "2025-01-01"),
+    piece("b-same", "2026-03-01"),
+    piece("a-same", "2026-03-01"),
+    piece("c-new", "2026-04-01"),
+  ];
+  expect(pieces.sort(byNewest).map(({ id }) => id)).toEqual([
+    "c-new",
+    "a-same",
+    "b-same",
+    "b-old",
+  ]);
 });
 
 describe("isValidPieceId", () => {
@@ -149,19 +190,5 @@ describe("isValidPieceId", () => {
     "",
   ])("%j is invalid", (id) => {
     expect(isValidPieceId(id)).toBe(false);
-  });
-});
-
-describe("orphanFolders", () => {
-  test("folders that have no piece are reported, sorted", () => {
-    expect(
-      orphanFolders(["koi-pond", "no-index", "also-missing"], ["koi-pond"]),
-    ).toEqual(["also-missing", "no-index"]);
-  });
-
-  test("no orphans when every folder has a piece", () => {
-    expect(
-      orphanFolders(["koi-pond", "nocturne"], ["nocturne", "koi-pond"]),
-    ).toEqual([]);
   });
 });

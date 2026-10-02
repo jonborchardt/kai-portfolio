@@ -1,6 +1,16 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const pieceLinks = 'a[href*="/work/"]';
+
+/** Opens the home page and returns the address of every piece it lists. */
+async function pieceUrls(page: Page): Promise<string[]> {
+  await page.goto("./");
+  return page
+    .locator(pieceLinks)
+    .evaluateAll((links) =>
+      links.map((link) => (link as HTMLAnchorElement).href),
+    );
+}
 
 test.beforeEach(async ({ page }) => {
   // The tests check our own pages; third-party video players are not loaded.
@@ -31,12 +41,7 @@ test("opening the first piece shows its title and media", async ({ page }) => {
 test("every piece page opens directly and its media files load", async ({
   page,
 }) => {
-  await page.goto("./");
-  const urls = await page
-    .locator(pieceLinks)
-    .evaluateAll((links) =>
-      links.map((link) => (link as HTMLAnchorElement).href),
-    );
+  const urls = await pieceUrls(page);
   expect(urls.length).toBeGreaterThan(0);
 
   for (const url of urls) {
@@ -47,6 +52,15 @@ test("every piece page opens directly and its media files load", async ({
       await page.locator("article :is(img, audio, video, iframe)").count(),
       `${url} shows no media`,
     ).toBeGreaterThan(0);
+
+    // The item at the top of the page is in view at once, so it must not
+    // wait to load.
+    const first = page
+      .locator("article :is(img, audio, video, iframe)")
+      .first();
+    if (await first.evaluate((el) => el.tagName === "IMG")) {
+      await expect(first).not.toHaveAttribute("loading", "lazy");
+    }
 
     for (const image of await page.locator("article img").all()) {
       await image.scrollIntoViewIfNeeded();
@@ -76,10 +90,57 @@ test("every piece page opens directly and its media files load", async ({
   }
 });
 
+test("every page's share card image loads", async ({ page }) => {
+  const urls = await pieceUrls(page);
+
+  for (const url of [page.url(), ...urls]) {
+    await page.goto(url);
+    const card = await page
+      .locator('meta[property="og:image"]')
+      .getAttribute("content");
+    // The address points at the published site; fetch the same path locally.
+    const image = await page.request.get(new URL(card ?? "").pathname);
+    expect(image.ok(), `${card} on ${url}`).toBe(true);
+    expect(image.headers()["content-type"]).toBe("image/jpeg");
+  }
+});
+
 test("the About page loads", async ({ page }) => {
   const response = await page.goto("./about/");
   expect(response?.status()).toBe(200);
   await expect(page.locator("article")).not.toBeEmpty();
+});
+
+test("links written in Markdown from the site root lead to real pages", async ({
+  page,
+}) => {
+  const urls = await pieceUrls(page);
+
+  for (const url of [new URL("about/", page.url()).href, ...urls]) {
+    await page.goto(url);
+    const links = await page
+      .locator('article a[href^="/"]')
+      .evaluateAll((anchors) =>
+        anchors.map((anchor) => (anchor as HTMLAnchorElement).href),
+      );
+    for (const link of links) {
+      const target = await page.request.get(link);
+      expect(target.ok(), `${link} on ${url}`).toBe(true);
+    }
+  }
+});
+
+test("the theme button switches to dark mode and the choice is kept", async ({
+  page,
+}) => {
+  await page.goto("./");
+  const html = page.locator("html");
+  await expect(html).toHaveAttribute("data-theme", "light");
+  await page.getByRole("button", { name: "Dark mode" }).click();
+  await expect(html).toHaveAttribute("data-theme", "dark");
+  await page.reload();
+  await expect(html).toHaveAttribute("data-theme", "dark");
+  await expect(page.getByRole("button", { name: "Light mode" })).toBeVisible();
 });
 
 test("an unknown URL shows the not-found page", async ({ page }) => {

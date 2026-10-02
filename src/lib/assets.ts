@@ -1,16 +1,16 @@
 import { existsSync, readdirSync } from "node:fs";
 import type { ImageMetadata } from "astro";
 import type { CollectionEntry } from "astro:content";
-import { embedUrl, mediaKind, orphanFolders } from "./media";
+import { embedUrl, mediaKind } from "./media";
 
-// Both letter cases are listed because cameras and phones write IMG_1234.JPG
-// and glob patterns are case-sensitive.
+// Glob patterns are case-sensitive, and cameras and phones write IMG_1234.JPG,
+// so each letter is listed in both cases.
 const images = import.meta.glob<ImageMetadata>(
-  "/content/work/**/*.{jpg,jpeg,png,webp,gif,avif,JPG,JPEG,PNG,WEBP,GIF,AVIF}",
+  "/content/work/**/*.{[jJ][pP][gG],[jJ][pP][eE][gG],[pP][nN][gG],[wW][eE][bB][pP],[gG][iI][fF],[aA][vV][iI][fF]}",
   { eager: true, import: "default" },
 );
 const files = import.meta.glob<string>(
-  "/content/work/**/*.{mp3,m4a,wav,ogg,mp4,webm,MP3,M4A,WAV,OGG,MP4,WEBM}",
+  "/content/work/**/*.{[mM][pP]3,[mM]4[aA],[wW][aA][vV],[oO][gG][gG],[mM][pP]4,[wW][eE][bB][mM]}",
   { eager: true, import: "default", query: "?url" },
 );
 
@@ -18,16 +18,14 @@ type Piece = CollectionEntry<"work">;
 
 export type ResolvedMedia =
   | { kind: "image"; image: ImageMetadata; alt: string }
-  | { kind: "audio" | "video"; url: string; label: string }
-  | { kind: "embed"; url: string; label: string };
+  | { kind: "audio" | "video" | "embed"; url: string; label: string };
 
 function lookup<T>(map: Record<string, T>, pieceId: string, name: string): T {
-  const folder = `/content/work/${pieceId}/`;
-  const found = map[folder + name];
+  const found = map[`/content/work/${pieceId}/${name}`];
   if (found !== undefined) return found;
-  const present = [...Object.keys(images), ...Object.keys(files)]
-    .filter((path) => path.startsWith(folder))
-    .map((path) => path.slice(folder.length));
+  const present = readdirSync(`content/work/${pieceId}`).filter(
+    (file) => file !== "index.md",
+  );
   throw new Error(
     `content/work/${pieceId}/index.md lists "${name}" but that file is not in the folder. ` +
       `File names are case-sensitive. Files found: ${present.join(", ") || "none"}.`,
@@ -56,26 +54,35 @@ export function resolveMedia(piece: Piece): ResolvedMedia[] {
   });
 }
 
-/** The first image in a piece's media, used as its thumbnail and preview-card image. */
-export function coverImage(
+/**
+ * The first image in a piece's media: the built asset for its thumbnail, and
+ * the path from the project root to the file for its share card.
+ */
+export function cover(
   piece: Piece,
-): { image: ImageMetadata; alt: string } | undefined {
-  const first = resolveMedia(piece).find((media) => media.kind === "image");
-  return first?.kind === "image"
-    ? { image: first.image, alt: first.alt }
-    : undefined;
+): { image: ImageMetadata; path: string } | undefined {
+  const first = piece.data.media.find(
+    (item) => mediaKind(item.src) === "image",
+  );
+  return (
+    first && {
+      image: lookup(images, piece.id, first.src),
+      path: `content/work/${piece.id}/${first.src}`,
+    }
+  );
 }
 
 /** Fails the build when a folder in content/work has no index.md, or a misnamed one. */
 export function assertNoOrphanFolders(pieceIds: string[]): void {
   // Read from disk rather than the globs above, so a piece with only a video
   // link, or only unsupported files, is still seen.
-  const folders = existsSync("content/work")
+  const orphans = existsSync("content/work")
     ? readdirSync("content/work", { withFileTypes: true })
-        .filter((entry) => entry.isDirectory())
+        .filter(
+          (entry) => entry.isDirectory() && !pieceIds.includes(entry.name),
+        )
         .map((entry) => entry.name)
     : [];
-  const orphans = orphanFolders(folders, pieceIds);
   if (orphans.length > 0) {
     throw new Error(
       `These folders in content/work have no index.md, so they would not appear on the site: ${orphans.join(", ")}. ` +

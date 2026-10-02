@@ -1,10 +1,10 @@
 ---
-import { getImage } from "astro:assets";
 import { getCollection, render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 import Media from "../../components/Media.astro";
 import Base from "../../layouts/Base.astro";
-import { coverImage, resolveMedia } from "../../lib/assets";
+import { resolveMedia } from "../../lib/assets";
+import { formatMonthYear } from "../../lib/media";
 
 export async function getStaticPaths() {
   const pieces = await getCollection("work");
@@ -22,20 +22,15 @@ const { piece } = Astro.props;
 const { title, type, medium, date } = piece.data;
 const { Content } = await render(piece);
 const media = resolveMedia(piece);
-
-const cover = coverImage(piece);
-const preview =
-  cover && (await getImage({ src: cover.image, width: 1200, format: "jpg" }));
-
-const monthYear = new Intl.DateTimeFormat("en-US", {
-  month: "long",
-  year: "numeric",
-  timeZone: "UTC",
-});
-const description = [medium, monthYear.format(date)].filter(Boolean).join(", ");
+const monthYear = formatMonthYear(date);
+const description = [medium, monthYear].filter(Boolean).join(", ");
 ---
 
-<Base title={title} description={description} image={preview?.src}>
+<Base
+  title={title}
+  description={description}
+  card={`/work/${piece.id}/card.jpg`}
+>
   <article class="space-y-6">
     <header>
       <h1 class="text-3xl font-bold">{title}</h1>
@@ -43,15 +38,13 @@ const description = [medium, monthYear.format(date)].filter(Boolean).join(", ");
         {type}
         {medium && ` · ${medium}`}
         {" · "}
-        <time datetime={date.toISOString().slice(0, 10)}>
-          {monthYear.format(date)}
-        </time>
+        <time datetime={date.toISOString().slice(0, 10)}>{monthYear}</time>
       </p>
     </header>
-    {media.map((item) => (
-      <Media media={item} />
+    {media.map((item, index) => (
+      <Media media={item} priority={index === 0} />
     ))}
-    <div class="prose">
+    <div class="prose dark:prose-invert">
       <Content />
     </div>
   </article>

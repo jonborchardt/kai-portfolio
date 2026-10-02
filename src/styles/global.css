@@ -1,5 +1,13 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Base.astro sets data-theme on <html>. Dark mode uses the browser's own
+   dark colors; `dark:` classes cover anything that sets its own. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
 /* Design tokens (fonts, colors, spacing) go in an @theme block here
    once the visual design is decided. */

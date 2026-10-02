@@ -16,7 +16,7 @@ const EXTENSIONS: Record<string, MediaKind> = {
 };
 
 /** For error messages shown to whoever is adding content. */
-export const SUPPORTED = `${Object.keys(EXTENSIONS).join(", ")}, or a YouTube or Vimeo link`;
+export const SUPPORTED = `${Object.keys(EXTENSIONS).join(", ")} files, or a link to a YouTube or Vimeo video`;
 
 /** Embed address for a YouTube or Vimeo link; undefined for anything else. */
 export function embedUrl(src: string): string | undefined {
@@ -28,23 +28,27 @@ export function embedUrl(src: string): string | undefined {
   }
   if (url.protocol !== "https:" && url.protocol !== "http:") return undefined;
 
-  const host = url.hostname.replace(/^(www|m)\./, "");
+  const host = url.hostname.replace(/^(www|m|music)\./, "");
   const path = url.pathname.split("/").filter(Boolean);
 
   if (host === "youtu.be" || host === "youtube.com") {
     let id: string | null | undefined;
     if (host === "youtu.be") id = path[0];
     else if (path[0] === "watch") id = url.searchParams.get("v");
-    else if (path[0] === "shorts" || path[0] === "embed") id = path[1];
+    else if (["shorts", "embed", "live"].includes(path[0])) id = path[1];
     return id && /^[\w-]{11}$/.test(id)
       ? `https://www.youtube-nocookie.com/embed/${id}`
       : undefined;
   }
 
-  if (host === "vimeo.com" && /^\d+$/.test(path[0] ?? "")) {
-    // Unlisted Vimeo links carry a hash the player needs: vimeo.com/<id>/<hash>
-    const hash = /^[0-9a-f]+$/i.test(path[1] ?? "") ? `?h=${path[1]}` : "";
-    return `https://player.vimeo.com/video/${path[0]}${hash}`;
+  if (host === "vimeo.com" || host === "player.vimeo.com") {
+    // The video number is the first all-digit part of the path, which covers
+    // vimeo.com/<id>, vimeo.com/manage/videos/<id> and player.vimeo.com/video/<id>.
+    const at = path.findIndex((part) => /^\d+$/.test(part));
+    if (at === -1) return undefined;
+    // Unlisted videos carry a hash the player needs: <id>/<hash> or ?h=<hash>
+    const hash = url.searchParams.get("h") ?? path[at + 1] ?? "";
+    return `https://player.vimeo.com/video/${path[at]}${/^[0-9a-f]+$/i.test(hash) ? `?h=${hash}` : ""}`;
   }
 
   return undefined;
@@ -68,19 +72,39 @@ export function parseDate(value: unknown): Date | undefined {
   }
   const match = /^(\d{4})-(\d{2})(?:-(\d{2}))?$/.exec(String(value));
   if (!match) return undefined;
-  const date = new Date(
-    `${match[1]}-${match[2]}-${match[3] ?? "01"}T00:00:00Z`,
+  const day = `${match[1]}-${match[2]}-${match[3] ?? "01"}`;
+  const date = new Date(`${day}T00:00:00Z`);
+  // A day that does not exist rolls over (2026-02-31 becomes March 3), so
+  // only a date that comes back as it was written is accepted.
+  return !Number.isNaN(date.valueOf()) && date.toISOString().startsWith(day)
+    ? date
+    : undefined;
+}
+
+const monthYear = new Intl.DateTimeFormat("en-US", {
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+/** A date as shown on the site: "March 2026". */
+export function formatMonthYear(date: Date): string {
+  return monthYear.format(date);
+}
+
+interface Dated {
+  id: string;
+  data: { date: Date };
+}
+
+/** Sort order for pieces: newest first, and by folder name within the same date. */
+export function byNewest(a: Dated, b: Dated): number {
+  return (
+    b.data.date.valueOf() - a.data.date.valueOf() || (a.id < b.id ? -1 : 1)
   );
-  return Number.isNaN(date.valueOf()) ? undefined : date;
 }
 
 /** A piece's folder name is its URL, so: lowercase letters, digits, single hyphens. */
 export function isValidPieceId(id: string): boolean {
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id);
-}
-
-/** Folder names under content/work that have no piece, sorted. */
-export function orphanFolders(folders: string[], pieceIds: string[]): string[] {
-  const known = new Set(pieceIds);
-  return folders.filter((folder) => !known.has(folder)).sort();
 }

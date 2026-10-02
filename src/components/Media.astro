@@ -4,9 +4,11 @@ import type { ResolvedMedia } from "../lib/assets";
 
 interface Props {
   media: ResolvedMedia;
+  /** For the item at the top of the page: an image loads right away instead of lazily. */
+  priority?: boolean;
 }
 
-const { media } = Astro.props;
+const { media, priority } = Astro.props;
 ---
 
 {media.kind === "image" && (
@@ -15,6 +17,7 @@ const { media } = Astro.props;
     alt={media.alt}
     widths={[640, 1280, 2000]}
     sizes="(min-width: 1024px) 992px, 100vw"
+    priority={priority}
   />
 )}
 {media.kind === "audio" && (
