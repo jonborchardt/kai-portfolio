@@ -1,7 +1,45 @@
 ---
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
 import Base from "../layouts/Base.astro";
+import { assertNoOrphanFolders, coverImage } from "../lib/assets";
+import { href } from "../lib/href";
+
+const pieces = (await getCollection("work")).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+assertNoOrphanFolders(pieces.map((piece) => piece.id));
+
+const monthYear = new Intl.DateTimeFormat("en-US", {
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
 ---
 
-<Base>
-  <h1>Work</h1>
+<Base description="Artwork, photography, video and music by Kai.">
+  <h1 class="mb-6 text-3xl font-bold">Work</h1>
+  {pieces.length === 0 && <p>No work has been added yet.</p>}
+  <ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    {pieces.map((piece) => {
+      const cover = coverImage(piece);
+      return (
+        <li>
+          <a href={href(`/work/${piece.id}/`)}>
+            {cover && <Image src={cover.image} alt={cover.alt} width={640} />}
+            <h2 class="mt-2 text-xl font-semibold underline">
+              {piece.data.title}
+            </h2>
+          </a>
+          <p>
+            {piece.data.type}
+            {" · "}
+            <time datetime={piece.data.date.toISOString().slice(0, 10)}>
+              {monthYear.format(piece.data.date)}
+            </time>
+          </p>
+        </li>
+      );
+    })}
+  </ul>
 </Base>

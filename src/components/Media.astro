@@ -1,0 +1,48 @@
+---
+import { Image } from "astro:assets";
+import type { ResolvedMedia } from "../lib/assets";
+
+interface Props {
+  media: ResolvedMedia;
+}
+
+const { media } = Astro.props;
+---
+
+{media.kind === "image" && (
+  <Image
+    src={media.image}
+    alt={media.alt}
+    widths={[640, 1280, 2000]}
+    sizes="(min-width: 1024px) 992px, 100vw"
+  />
+)}
+{media.kind === "audio" && (
+  <audio
+    class="w-full"
+    controls
+    preload="metadata"
+    src={media.url}
+    aria-label={media.label}
+  />
+)}
+{media.kind === "video" && (
+  <video
+    class="w-full"
+    controls
+    playsinline
+    preload="metadata"
+    src={media.url}
+    aria-label={media.label}
+  />
+)}
+{media.kind === "embed" && (
+  <iframe
+    class="aspect-video w-full"
+    src={media.url}
+    title={media.label}
+    loading="lazy"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    allowfullscreen
+  />
+)}
