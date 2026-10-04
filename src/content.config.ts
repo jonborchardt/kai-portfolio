@@ -9,6 +9,7 @@ import {
   SUPPORTED,
   TYPES,
   type WorkType,
+  writtenDate,
 } from "./lib/media";
 
 const mediaItem = z
@@ -17,6 +18,8 @@ const mediaItem = z
     z.object({ src: z.string(), alt: z.string().optional() }),
   ])
   .transform((item) => (typeof item === "string" ? { src: item } : item))
+  // "./cover.jpg" means the same file as "cover.jpg".
+  .transform((item) => ({ ...item, src: item.src.replace(/^\.\//, "") }))
   .refine((item) => mediaKind(item.src) !== undefined, {
     error: (issue) =>
       `"${(issue.input as { src: string }).src}" is not supported. Use ${SUPPORTED}.`,
@@ -36,9 +39,7 @@ const work = defineCollection({
       // YAML turns a full date into a Date before the schema sees it, rolling
       // a day that does not exist over into the next month, so the date is
       // checked here as it was written.
-      const written = /^date:\s*["']?([^\s"']+)/m.exec(
-        readFileSync(new URL(entry, base), "utf8"),
-      )?.[1];
+      const written = writtenDate(readFileSync(new URL(entry, base), "utf8"));
       if (written && !parseDate(written)) {
         throw new Error(
           `content/work/${id}/index.md: "${written}" is not a real date. The date must look like 2026-03 or 2026-03-14.`,

@@ -81,6 +81,15 @@ export function parseDate(value: unknown): Date | undefined {
     : undefined;
 }
 
+/**
+ * The `date` as it was typed in a piece's front matter (the block between the
+ * `---` lines); undefined when there is none, or nothing after `date:`.
+ */
+export function writtenDate(text: string): string | undefined {
+  const frontMatter = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text)?.[1] ?? "";
+  return /^date:[ \t]*["']?([^\s"']+)/m.exec(frontMatter)?.[1];
+}
+
 const monthYear = new Intl.DateTimeFormat("en-US", {
   month: "long",
   year: "numeric",

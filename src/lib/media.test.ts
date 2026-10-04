@@ -7,7 +7,25 @@ import {
   mediaKind,
   parseDate,
   tileShape,
+  writtenDate,
 } from "./media";
+
+describe("writtenDate", () => {
+  test("reads the date as typed, with or without quotes", () => {
+    expect(writtenDate("---\ntitle: A\ndate: 2026-02-31\n---\n")).toBe(
+      "2026-02-31",
+    );
+    expect(writtenDate('---\r\ndate: "2026-03"\r\n---\r\n')).toBe("2026-03");
+  });
+
+  test("an empty date does not pick up the next line", () => {
+    expect(writtenDate("---\ndate:\ntype: painting\n---\n")).toBeUndefined();
+  });
+
+  test("a date line in the body is not the front matter date", () => {
+    expect(writtenDate("---\ntitle: A\n---\ndate: tomorrow\n")).toBeUndefined();
+  });
+});
 
 describe("mediaKind", () => {
   test.each([

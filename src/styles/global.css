@@ -27,6 +27,11 @@
   --text-lg: 1.0625rem;
   --text-xl: clamp(1.25rem, 2.5vw, 1.5rem);
   --text-brand: clamp(1.5rem, 6vw, 2rem);
+  /* Letter spacing: wide for labels, tight for titles and reading text. */
+  --track-label: 0.04em;
+  --track-title: -0.02em;
+  --track-text: -0.01em;
+  --underline-offset: 0.2em;
 
   /* Space */
   --space-1: 4px;
@@ -39,20 +44,33 @@
   --gutter: var(--space-5);
 
   /* Lines, corners, focus, motion */
-  --line: 1px solid var(--ink);
-  --rule: 1px solid var(--soft);
+  --line-width: 1px;
+  --line: var(--line-width) solid var(--ink);
+  --rule: var(--line-width) solid var(--soft);
   --radius: 0;
+  --round: 50%;
   --focus: 2px solid var(--accent);
+  --focus-offset: 2px;
   --speed: 150ms;
 
   /* Layout */
   --cell: 200px;
   --side: 22.5rem;
   --image-max: 560px;
+  /* An image's height limit once the page is one column. */
+  --image-max-stacked: 85svh;
+  /* The label column of a piece's Type / Medium / Date list. */
+  --label: 5rem;
   --video-max: 900px;
   --audio-max: 600px;
   /* The header at full width: the name, its padding and its bottom line. */
-  --header-height: calc(2rem + 2 * var(--space-3) + 1px);
+  --header-height: calc(2rem + 2 * var(--space-3) + var(--line-width));
+  /* The filter bar at its tallest: three rows of filters on a narrow phone,
+     its padding, and a little for its lines and the focus ring. */
+  --filters-height: calc(
+    3 * (1.5 * var(--text-xs) + 2 * var(--space-1)) + 2 * var(--space-2) +
+      var(--space-1)
+  );
 
   color-scheme: dark;
 }
@@ -65,7 +83,7 @@
 /* Base */
 html {
   /* Keeps a focused tile clear of the sticky filter bar. */
-  scroll-padding-top: 4rem;
+  scroll-padding-top: var(--filters-height);
 }
 body {
   background: var(--bg);
@@ -75,11 +93,11 @@ body {
 }
 :focus-visible {
   outline: var(--focus);
-  outline-offset: 2px;
+  outline-offset: var(--focus-offset);
 }
 :is(nav, .links) a:hover {
   text-decoration: underline;
-  text-underline-offset: 0.2em;
+  text-underline-offset: var(--underline-offset);
 }
 /* Small links and labels are at least 24px tall, to be easy to tap. */
 :is(nav, .links) a,
@@ -95,7 +113,7 @@ footer,
 .skip,
 .doc dt {
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--track-label);
 }
 /* The first Tab stop on every page; out of sight until it has focus. */
 .skip {
@@ -127,7 +145,7 @@ footer,
   gap: var(--space-3);
   align-items: center;
   font: 600 var(--text-brand) / 1 var(--sans);
-  letter-spacing: -0.02em;
+  letter-spacing: var(--track-title);
 }
 .who img {
   width: 1em;
@@ -170,7 +188,7 @@ footer {
   max-width: 60ch;
   padding: var(--space-6) var(--gutter);
   font: 500 var(--text-lg) / 1.5 var(--sans);
-  letter-spacing: -0.01em;
+  letter-spacing: var(--track-text);
 }
 .tools {
   position: sticky;
@@ -192,7 +210,7 @@ footer {
 }
 .filters label:hover {
   text-decoration: underline;
-  text-underline-offset: 0.2em;
+  text-underline-offset: var(--underline-offset);
 }
 /* The radio button is drawn as a dot: hollow, or filled when chosen. It is the
    one round thing on the site. */
@@ -201,8 +219,8 @@ footer {
   width: 0.75em;
   height: 0.75em;
   margin-right: var(--space-1);
-  border: 1px solid currentColor;
-  border-radius: 50%;
+  border: var(--line-width) solid currentColor;
+  border-radius: var(--round);
 }
 .filters input:checked {
   background: var(--accent);
@@ -214,7 +232,7 @@ footer {
 }
 .filters label:has(:focus-visible) {
   outline: var(--focus);
-  outline-offset: 2px;
+  outline-offset: var(--focus-offset);
 }
 /* A type with no pieces yet cannot be chosen. */
 .filters label:has(:disabled) {
@@ -314,11 +332,15 @@ footer {
   position: sticky;
   top: 0;
   align-self: start;
+  /* Text taller than the window scrolls on its own, so its end and the
+     links under it can be reached while the work is still on screen. */
+  max-height: 100vh;
+  overflow-y: auto;
   padding: var(--space-6) var(--gutter);
 }
 .doc h1 {
   font: 600 var(--text-xl) / 1.1 var(--sans);
-  letter-spacing: -0.02em;
+  letter-spacing: var(--track-title);
   margin: var(--space-2) 0 var(--space-4);
 }
 /* The About page's heading is a quiet label rather than a title. */
@@ -344,7 +366,7 @@ footer {
 }
 .doc dl {
   display: grid;
-  grid-template-columns: 5rem 1fr;
+  grid-template-columns: var(--label) 1fr;
   border-bottom: var(--rule);
   margin-top: var(--space-4);
 }
@@ -421,6 +443,8 @@ footer {
   }
   .doc .side {
     position: static;
+    max-height: none;
+    overflow-y: visible;
   }
   /* Every mosaic and image sits one gutter from the edge, the same as the text. */
   .sheet {
@@ -441,7 +465,7 @@ footer {
     padding: var(--gutter);
   }
   .frame img {
-    max-height: 85svh;
+    max-height: var(--image-max-stacked);
   }
   /* The footer has the contact links, so the About page does not repeat them. */
   .doc.about dl {
@@ -453,9 +477,9 @@ footer {
 @media (max-width: 560px) {
   :root {
     --gutter: var(--space-4);
+    --cell: 44vw;
   }
   .sheet {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-rows: 44vw;
   }
 }
