@@ -2,7 +2,14 @@ import { readFileSync } from "node:fs";
 import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
-import { isValidPieceId, mediaKind, parseDate, SUPPORTED } from "./lib/media";
+import {
+  isValidPieceId,
+  mediaKind,
+  parseDate,
+  SUPPORTED,
+  TYPES,
+  type WorkType,
+} from "./lib/media";
 
 const mediaItem = z
   .union([
@@ -48,10 +55,27 @@ const work = defineCollection({
         message: "date must look like 2026-03 or 2026-03-14",
       })
       .transform((value) => parseDate(value) as Date),
-    type: z.enum(["art", "photo", "video", "music"]),
+    type: z.enum(Object.keys(TYPES) as [WorkType, ...WorkType[]]),
     medium: z.string().optional(),
     media: z.array(mediaItem).min(1),
   }),
 });
 
-export const collections = { work };
+// content/about.md: the bio, plus words and pictures the whole site uses.
+const about = defineCollection({
+  loader: glob({ pattern: "about.md", base: "./content" }),
+  // Pictures are paths from about.md, such as ./about/portrait.jpg; a missing
+  // one fails the build.
+  schema: ({ image }) =>
+    z.object({
+      description: z.string().min(1),
+      mission: z.string().min(1),
+      contact: z
+        .array(z.object({ label: z.string().min(1), url: z.string().min(1) }))
+        .default([]),
+      portrait: image().optional(),
+      images: z.array(image()).default([]),
+    }),
+});
+
+export const collections = { work, about };

@@ -6,6 +6,7 @@ import {
   isValidPieceId,
   mediaKind,
   parseDate,
+  tileShape,
 } from "./media";
 
 describe("mediaKind", () => {
@@ -190,5 +191,22 @@ describe("isValidPieceId", () => {
     "",
   ])("%j is invalid", (id) => {
     expect(isValidPieceId(id)).toBe(false);
+  });
+});
+
+describe("tileShape", () => {
+  test("every 11th tile is big, whatever its shape", () => {
+    expect(tileShape(0, 600, 400)).toBe("big");
+    expect(tileShape(11, 400, 600)).toBe("big");
+  });
+
+  test("the others follow the image's shape", () => {
+    expect(tileShape(1, 600, 400)).toBe("wide");
+    expect(tileShape(2, 400, 600)).toBe("tall");
+    expect(tileShape(3, 500, 500)).toBe("");
+  });
+
+  test("a tile with no image is a single cell", () => {
+    expect(tileShape(4)).toBe("");
   });
 });

@@ -108,3 +108,28 @@ export function byNewest(a: Dated, b: Dated): number {
 export function isValidPieceId(id: string): boolean {
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id);
 }
+
+/** The kinds of work, as written in a piece's `type` field, with the label shown on the site. */
+export const TYPES = {
+  painting: "Paintings",
+  drawing: "Drawings",
+  writing: "Writing",
+  marimba: "Marimba",
+} as const;
+
+export type WorkType = keyof typeof TYPES;
+
+/**
+ * How much of the mosaic a tile takes: every 11th tile is big, and the rest
+ * take one or two cells to suit the image's shape.
+ */
+export function tileShape(
+  index: number,
+  width?: number,
+  height?: number,
+): "big" | "wide" | "tall" | "" {
+  if (index % 11 === 0) return "big";
+  if (!width || !height) return "";
+  const ratio = width / height;
+  return ratio > 1.3 ? "wide" : ratio < 0.85 ? "tall" : "";
+}

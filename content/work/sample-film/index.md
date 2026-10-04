@@ -1,8 +1,9 @@
 ---
 title: Sample Film
 date: 2025-11
-type: video
+type: marimba
 media:
+  - cover.jpg
   - https://www.youtube.com/watch?v=aqz-KE-bpKQ
   - clip.webm
 ---

@@ -2,28 +2,40 @@
 import { getCollection, render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 import Media from "../../components/Media.astro";
+import Tile from "../../components/Tile.astro";
 import Base from "../../layouts/Base.astro";
-import { resolveMedia } from "../../lib/assets";
-import { formatMonthYear } from "../../lib/media";
+import { resolveMedia, type ResolvedMedia } from "../../lib/assets";
+import { href } from "../../lib/href";
+import { byNewest, formatMonthYear, TYPES } from "../../lib/media";
 
 export async function getStaticPaths() {
-  const pieces = await getCollection("work");
-  return pieces.map((piece) => ({
+  const pieces = (await getCollection("work")).sort(byNewest);
+  return pieces.map((piece, index) => ({
     params: { id: piece.id },
-    props: { piece },
+    // The pieces either side in the home page's order: newer and older.
+    props: { piece, newer: pieces[index - 1], older: pieces[index + 1] },
   }));
 }
 
 interface Props {
   piece: CollectionEntry<"work">;
+  newer?: CollectionEntry<"work">;
+  older?: CollectionEntry<"work">;
 }
 
-const { piece } = Astro.props;
+const { piece, newer, older } = Astro.props;
 const { title, type, medium, date } = piece.data;
 const { Content } = await render(piece);
-const media = resolveMedia(piece);
 const monthYear = formatMonthYear(date);
 const description = [medium, monthYear].filter(Boolean).join(", ");
+
+// A run of images becomes a mosaic; a lone image or a player stands on its own.
+const groups: ResolvedMedia[][] = [];
+for (const item of resolveMedia(piece)) {
+  const last = groups.at(-1);
+  if (item.kind === "image" && last?.[0].kind === "image") last.push(item);
+  else groups.push([item]);
+}
 ---
 
 <Base
@@ -31,21 +43,86 @@ const description = [medium, monthYear].filter(Boolean).join(", ");
   description={description}
   card={`/work/${piece.id}/card.jpg`}
 >
-  <article class="space-y-6">
-    <header>
-      <h1 class="text-3xl font-bold">{title}</h1>
-      <p>
-        {type}
-        {medium && ` · ${medium}`}
-        {" · "}
-        <time datetime={date.toISOString().slice(0, 10)}>{monthYear}</time>
-      </p>
-    </header>
-    {media.map((item, index) => (
-      <Media media={item} priority={index === 0} />
-    ))}
-    <div class="prose dark:prose-invert">
-      <Content />
+  <article class="doc">
+    <div class="side">
+      <h1>{title}</h1>
+      <div class="prose prose-sm prose-invert">
+        <Content />
+      </div>
+      <dl>
+        <dt>Type</dt>
+        <dd>{TYPES[type]}</dd>
+        {medium && (
+          <>
+            <dt>Medium</dt>
+            <dd>{medium}</dd>
+          </>
+        )}
+        <dt>Date</dt>
+        <dd>
+          <time datetime={date.toISOString().slice(0, 10)}>{monthYear}</time>
+        </dd>
+      </dl>
+      <nav class="pn" aria-label="More work">
+        {/* The arrows are for the eye; a screen reader hears "Newer" and "Older". */}
+        {newer && (
+          <a href={href(`/work/${newer.id}/`)}>
+            <span aria-hidden="true">← </span>
+            <span class="sr-only">Newer: </span>
+            {newer.data.title}
+          </a>
+        )}
+        {older && (
+          <a href={href(`/work/${older.id}/`)}>
+            <span aria-hidden="true">→ </span>
+            <span class="sr-only">Older: </span>
+            {older.data.title}
+          </a>
+        )}
+        <a href={href("/")}>
+          <span aria-hidden="true">↑ </span>Home
+        </a>
+      </nav>
+    </div>
+    <div class="plate">
+      {groups.map((group, groupIndex) =>
+        group.length > 1 ? (
+          <div class="sheet">
+            {group.map(
+              (item, index) =>
+                item.kind === "image" && (
+                  <Tile
+                    index={index}
+                    image={item.image}
+                    alt={item.alt}
+                    priority={groupIndex === 0 && index === 0}
+                  />
+                ),
+            )}
+          </div>
+        ) : (
+          <div class="frame">
+            <Media media={group[0]} priority={groupIndex === 0} />
+          </div>
+        ),
+      )}
     </div>
   </article>
 </Base>
+
+<script>
+  // The media hangs from the title's bottom line. A title that wraps ends
+  // lower, so the real position is measured (against the side column, which
+  // is the title's offset parent while it is sticky). Without JavaScript the
+  // CSS estimate for a one-line title is used.
+  const title = document.querySelector<HTMLElement>(".doc .side h1");
+  const fit = () =>
+    title
+      ?.closest<HTMLElement>(".doc")
+      ?.style.setProperty(
+        "--title-bottom",
+        `${title.offsetTop + title.offsetHeight}px`,
+      );
+  fit();
+  addEventListener("resize", fit);
+</script>

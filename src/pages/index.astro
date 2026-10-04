@@ -1,39 +1,84 @@
 ---
-import { Image } from "astro:assets";
 import { getCollection } from "astro:content";
+import Tile from "../components/Tile.astro";
 import Base from "../layouts/Base.astro";
-import { assertNoOrphanFolders, cover } from "../lib/assets";
+import { about, assertNoOrphanFolders, cover } from "../lib/assets";
 import { href } from "../lib/href";
-import { byNewest, formatMonthYear } from "../lib/media";
+import { byNewest, formatMonthYear, TYPES } from "../lib/media";
+import { site } from "../site";
 
 const pieces = (await getCollection("work")).sort(byNewest);
 assertNoOrphanFolders(pieces.map((piece) => piece.id));
+const { mission } = (await about()).data;
+
+const filters = [
+  ["all", "All", pieces.length],
+  ...Object.entries(TYPES).map(([type, label]) => [
+    type,
+    label,
+    pieces.filter((piece) => piece.data.type === type).length,
+  ]),
+];
+// The filters work without JavaScript: choosing a type's radio button hides
+// every tile of another type, through one CSS rule per type.
+const filterRules = Object.keys(TYPES)
+  .map(
+    (type) =>
+      `.tools:has([value="${type}"]:checked) ~ .sheet .tile:not([data-type="${type}"]) { display: none }`,
+  )
+  .join("\n");
 ---
 
 <Base>
-  <h1 class="mb-6 text-3xl font-bold">Work</h1>
-  {pieces.length === 0 && <p>No work has been added yet.</p>}
-  <ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-    {pieces.map((piece) => {
-      const image = cover(piece)?.image;
-      return (
-        <li>
-          <a href={href(`/work/${piece.id}/`)}>
-            {/* The title below names the link, so the thumbnail has no alt text to repeat it. */}
-            {image && <Image src={image} alt="" width={640} />}
-            <h2 class="mt-2 text-xl font-semibold underline">
-              {piece.data.title}
-            </h2>
-          </a>
-          <p>
-            {piece.data.type}
-            {" · "}
-            <time datetime={piece.data.date.toISOString().slice(0, 10)}>
-              {formatMonthYear(piece.data.date)}
-            </time>
-          </p>
-        </li>
-      );
-    })}
-  </ul>
+  <style slot="head" is:inline set:html={filterRules}></style>
+  <h1 class="sr-only">Work by {site.author}</h1>
+  <p class="mission">{mission}</p>
+  {pieces.length === 0 ? (
+    <p class="mission">No work has been added yet.</p>
+  ) : (
+    <>
+      <fieldset class="tools">
+        <legend class="sr-only">Filter by type</legend>
+        <div class="filters">
+          {filters.map(([type, label, count]) => (
+            <label>
+              <input
+                type="radio"
+                name="type"
+                value={type}
+                checked={type === "all"}
+                disabled={count === 0}
+              />
+              {label} <span>{count}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <div class="sheet">
+        {pieces.map((piece, index) => {
+          const image = cover(piece)?.image;
+          return (
+            // The caption names the link, so the thumbnail has no alt text to repeat it.
+            <Tile
+              index={index}
+              image={image}
+              href={href(`/work/${piece.id}/`)}
+              type={piece.data.type}
+              priority={index === 0}
+            >
+              {!image && (
+                <span class="blank" aria-hidden="true">
+                  {piece.data.title}
+                </span>
+              )}
+              <div class="cap">
+                <h2>{piece.data.title}</h2>
+                {TYPES[piece.data.type]} · {formatMonthYear(piece.data.date)}
+              </div>
+            </Tile>
+          );
+        })}
+      </div>
+    </>
+  )}
 </Base>

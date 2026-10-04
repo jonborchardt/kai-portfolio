@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from "node:fs";
 import type { ImageMetadata } from "astro";
-import type { CollectionEntry } from "astro:content";
+import { getEntry, type CollectionEntry } from "astro:content";
 import { embedUrl, mediaKind } from "./media";
 
 // Glob patterns are case-sensitive, and cameras and phones write IMG_1234.JPG,
@@ -70,6 +70,13 @@ export function cover(
       path: `content/work/${piece.id}/${first.src}`,
     }
   );
+}
+
+/** content/about.md: its checked fields in `data`, and the bio to render. */
+export async function about(): Promise<CollectionEntry<"about">> {
+  const entry = await getEntry("about", "about");
+  if (!entry) throw new Error("content/about.md is missing.");
+  return entry;
 }
 
 /** Fails the build when a folder in content/work has no index.md, or a misnamed one. */

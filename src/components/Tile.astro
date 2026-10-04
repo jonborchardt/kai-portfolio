@@ -1,0 +1,41 @@
+---
+import type { ImageMetadata } from "astro";
+import { Image } from "astro:assets";
+import { tileShape } from "../lib/media";
+
+interface Props {
+  /** Position in the mosaic, which with the image's shape decides the tile's size. */
+  index: number;
+  image?: ImageMetadata;
+  alt?: string;
+  /** Makes the tile a link. Only the home page's tiles are. */
+  href?: string;
+  /** The piece's type, for the home page's filters. */
+  type?: string;
+  /** For a tile at the top of the page: its image loads right away instead of lazily. */
+  priority?: boolean;
+}
+
+const { index, image, alt = "", href, type, priority } = Astro.props;
+const shape = tileShape(index, image?.width, image?.height);
+const Tag = href ? "a" : "span";
+// How wide the tile is shown, so the browser downloads a file to match:
+// two cells or one, with the phone layout (560px in global.css) first.
+const sizes =
+  shape === "big" || shape === "wide"
+    ? "(max-width: 560px) 100vw, 600px"
+    : "(max-width: 560px) 50vw, 300px";
+---
+
+<Tag class:list={["tile", shape]} href={href} data-type={type}>
+  {image && (
+    <Image
+      src={image}
+      alt={alt}
+      widths={[400, 800, 1200]}
+      sizes={sizes}
+      priority={priority}
+    />
+  )}
+  <slot />
+</Tag>
