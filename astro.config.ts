@@ -1,6 +1,6 @@
 import { satteri } from "@astrojs/markdown-satteri";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "astro/config";
+import { defineConfig, fontProviders } from "astro/config";
 
 // Moving to a custom domain: set `site` to the domain, set `base` to "",
 // add public/CNAME, and update the base path in playwright.config.ts.
@@ -10,6 +10,26 @@ export default defineConfig({
   site: "https://jonborchardt.github.io",
   base,
   trailingSlash: "always",
+  // Downloaded once at build time and served from the site itself. Only the
+  // weights the design uses; global.css names them --sans and --mono.
+  fonts: [
+    {
+      provider: fontProviders.google(),
+      name: "Inter Tight",
+      cssVariable: "--font-inter-tight",
+      weights: [500, 600],
+      styles: ["normal"],
+      fallbacks: ["Helvetica Neue", "Arial", "sans-serif"],
+    },
+    {
+      provider: fontProviders.google(),
+      name: "IBM Plex Mono",
+      cssVariable: "--font-plex-mono",
+      weights: [400],
+      styles: ["normal"],
+      fallbacks: ["ui-monospace", "monospace"],
+    },
+  ],
   markdown: {
     processor: satteri({
       hastPlugins: [

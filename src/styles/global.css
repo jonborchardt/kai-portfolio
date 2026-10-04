@@ -1,13 +1,485 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-/* Base.astro sets data-theme on <html>. Dark mode uses the browser's own
-   dark colors; `dark:` classes cover anything that sets its own. */
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+/* The theme. Every rule below is built from these tokens, so a size, colour or
+   border is changed here and nowhere else. The site is dark only for now.
 
-[data-theme="dark"] {
+   There are two breakpoints (a media query cannot read a token, so the numbers
+   are repeated at the bottom of this file):
+     900px and under: the two-column pages stack into one.
+     560px and under: a phone. Two-cell mosaic, smaller gutter. */
+:root {
+  /* Colour. Text colours all pass WCAG AA (4.5:1) on --bg and on --well. */
+  --bg: #0e0e0e;
+  --ink: #f2f2f2;
+  --muted: #8c8c8c;
+  --soft: #2a2a2a;
+  --well: #191919;
+  --accent: #ff5a26;
+
+  /* Type. Sizes are in rem so the reader's own font size is respected. The
+     families come from the fonts list in astro.config.ts. */
+  --mono: var(--font-plex-mono);
+  --sans: var(--font-inter-tight);
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.0625rem;
+  --text-xl: clamp(1.25rem, 2.5vw, 1.5rem);
+  --text-brand: clamp(1.5rem, 6vw, 2rem);
+  /* Letter spacing: wide for labels, tight for titles and reading text. */
+  --track-label: 0.04em;
+  --track-title: -0.02em;
+  --track-text: -0.01em;
+  --underline-offset: 0.2em;
+
+  /* Space */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --gutter: var(--space-5);
+
+  /* Lines, corners, focus, motion */
+  --line-width: 1px;
+  --line: var(--line-width) solid var(--ink);
+  --rule: var(--line-width) solid var(--soft);
+  --radius: 0;
+  --round: 50%;
+  --focus: 2px solid var(--accent);
+  --focus-offset: 2px;
+  --speed: 150ms;
+
+  /* Layout */
+  --cell: 200px;
+  --side: 22.5rem;
+  --image-max: 560px;
+  /* An image's height limit once the page is one column. */
+  --image-max-stacked: 85svh;
+  /* The label column of a piece's Type / Medium / Date list. */
+  --label: 5rem;
+  --video-max: 900px;
+  --audio-max: 600px;
+  /* The header at full width: the name, its padding and its bottom line. */
+  --header-height: calc(2rem + 2 * var(--space-3) + var(--line-width));
+  /* The filter bar at its tallest: three rows of filters on a narrow phone,
+     its padding, and a little for its lines and the focus ring. */
+  --filters-height: calc(
+    3 * (1.5 * var(--text-xs) + 2 * var(--space-1)) + 2 * var(--space-2) +
+      var(--space-1)
+  );
+
   color-scheme: dark;
 }
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --speed: 0s;
+  }
+}
 
-/* Design tokens (fonts, colors, spacing) go in an @theme block here
-   once the visual design is decided. */
+/* Base */
+html {
+  /* Keeps a focused tile clear of the sticky filter bar. */
+  scroll-padding-top: var(--filters-height);
+}
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: var(--text-xs) / 1.5 var(--mono);
+  overflow-wrap: anywhere;
+}
+:focus-visible {
+  outline: var(--focus);
+  outline-offset: var(--focus-offset);
+}
+:is(nav, .links) a:hover {
+  text-decoration: underline;
+  text-underline-offset: var(--underline-offset);
+}
+/* Small links and labels are at least 24px tall, to be easy to tap. */
+:is(nav, .links) a,
+.filters label {
+  display: inline-block;
+  padding-block: var(--space-1);
+}
+/* The label voice: small capitals in the mono face. */
+.top nav,
+footer,
+.tools,
+.pn,
+.skip,
+.doc dt {
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+}
+/* The first Tab stop on every page; out of sight until it has focus. */
+.skip {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--gutter);
+  z-index: 10;
+  padding: var(--space-2) var(--space-3);
+  background: var(--ink);
+  color: var(--bg);
+  transform: translateY(-200%);
+}
+.skip:focus {
+  transform: none;
+}
+
+/* Header and footer */
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--gutter);
+  border-bottom: var(--line);
+}
+.who {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  font: 600 var(--text-brand) / 1 var(--sans);
+  letter-spacing: var(--track-title);
+}
+.who img {
+  width: 1em;
+  height: 1em;
+  object-fit: cover;
+  border-radius: var(--radius);
+}
+.top nav {
+  display: flex;
+  gap: var(--space-5);
+}
+.top nav a[aria-current="page"] {
+  color: var(--accent);
+}
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--gutter) calc(2 * var(--space-7));
+  border-top: var(--line);
+  color: var(--muted);
+}
+/* A row of links with a dot between them (the contact links). */
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+}
+.links li + li::before {
+  content: "·";
+  /* Not read aloud, where the browser supports it. */
+  content: "·" / "";
+  margin-right: var(--space-2);
+}
+
+/* Home: the mission statement, the filter bar, then the mosaic */
+.mission {
+  max-width: 60ch;
+  padding: var(--space-6) var(--gutter);
+  font: 500 var(--text-lg) / 1.5 var(--sans);
+  letter-spacing: var(--track-text);
+}
+.tools {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  min-width: 0;
+  padding: var(--space-2) var(--gutter);
+  background: var(--bg);
+  border-top: var(--line);
+  border-bottom: var(--line);
+}
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-5);
+}
+.filters label {
+  cursor: pointer;
+}
+.filters label:hover {
+  text-decoration: underline;
+  text-underline-offset: var(--underline-offset);
+}
+/* The radio button is drawn as a dot: hollow, or filled when chosen. It is the
+   one round thing on the site. */
+.filters input {
+  appearance: none;
+  width: 0.75em;
+  height: 0.75em;
+  margin-right: var(--space-1);
+  border: var(--line-width) solid currentColor;
+  border-radius: var(--round);
+}
+.filters input:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+/* The focus ring goes round the whole label, not just the dot. */
+.filters input:focus-visible {
+  outline: none;
+}
+.filters label:has(:focus-visible) {
+  outline: var(--focus);
+  outline-offset: var(--focus-offset);
+}
+/* A type with no pieces yet cannot be chosen. */
+.filters label:has(:disabled) {
+  color: var(--muted);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+.filters span {
+  color: var(--muted);
+}
+/* Windows high-contrast mode drops background colours, so it gets the
+   browser's own radio button back. */
+@media (forced-colors: active) {
+  .filters input {
+    appearance: auto;
+  }
+}
+
+/* The mosaic: a dense grid of square cells, with tiles spanning two of them
+   to suit their shape. */
+.sheet {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--cell), 1fr));
+  grid-auto-rows: var(--cell);
+  grid-auto-flow: dense;
+  gap: var(--space-1);
+  padding: var(--space-1);
+}
+/* A tile's background shows while its image loads. */
+.tile {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: var(--well);
+  border-radius: var(--radius);
+}
+/* The ring sits in the gap between tiles. */
+.tile:focus-visible {
+  outline-offset: 0;
+}
+.tile.wide {
+  grid-column: span 2;
+}
+.tile.tall {
+  grid-row: span 2;
+}
+.tile.big {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* A piece with no image shows its title instead. */
+.tile .blank {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: var(--space-4);
+  font: 500 var(--text-md) / 1.2 var(--sans);
+  text-align: center;
+}
+.cap {
+  position: absolute;
+  inset: auto 0 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--ink);
+  color: var(--bg);
+  opacity: 0;
+  transition: opacity var(--speed);
+}
+.cap h2 {
+  font: 500 var(--text-md) / 1.2 var(--sans);
+}
+.tile:hover .cap,
+.tile:focus-visible .cap {
+  opacity: 1;
+}
+/* A touch screen has no hover, so the captions are always shown. */
+@media (hover: none) {
+  .cap {
+    opacity: 1;
+  }
+}
+
+/* A piece or the About page: text on the left, the work on the right */
+.doc {
+  /* Where the title ends, so the work can hang from the same line. The piece
+     page measures the real value, since a title can wrap. */
+  --title-bottom: calc(var(--space-7) + var(--text-xl) * 1.1);
+  display: grid;
+  grid-template-columns: minmax(0, var(--side)) minmax(0, 1fr);
+}
+.doc .side {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  /* Text taller than the window scrolls on its own, so its end and the
+     links under it can be reached while the work is still on screen. */
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: var(--space-6) var(--gutter);
+}
+.doc h1 {
+  font: 600 var(--text-xl) / 1.1 var(--sans);
+  letter-spacing: var(--track-title);
+  margin: var(--space-2) 0 var(--space-4);
+}
+/* The About page's heading is a quiet label rather than a title. */
+.doc h1.label {
+  color: var(--accent);
+  font: 500 var(--text-sm) / 1.5 var(--sans);
+  letter-spacing: 0;
+  margin: 0 0 var(--space-3);
+}
+/* Markdown text, in the theme's colours rather than Tailwind's greys. */
+.doc .prose {
+  font-family: var(--sans);
+  --tw-prose-invert-body: var(--ink);
+  --tw-prose-invert-headings: var(--ink);
+  --tw-prose-invert-links: var(--ink);
+  --tw-prose-invert-bold: var(--ink);
+  --tw-prose-invert-quotes: var(--ink);
+  --tw-prose-invert-counters: var(--muted);
+  --tw-prose-invert-bullets: var(--muted);
+  --tw-prose-invert-captions: var(--muted);
+  --tw-prose-invert-hr: var(--soft);
+  --tw-prose-invert-quote-borders: var(--soft);
+}
+.doc dl {
+  display: grid;
+  grid-template-columns: var(--label) 1fr;
+  border-bottom: var(--rule);
+  margin-top: var(--space-4);
+}
+.doc :is(dt, dd) {
+  padding: var(--space-2) 0;
+  border-top: var(--rule);
+}
+.doc dt {
+  color: var(--muted);
+}
+.pn {
+  display: grid;
+  justify-items: start;
+  margin-top: var(--space-5);
+}
+/* Room between the bio and the contact line. */
+.doc.about dl {
+  margin-top: calc(3 * var(--space-7));
+}
+.doc.about dd {
+  padding: var(--space-1) 0;
+}
+/* The About page's mosaic fills its column edge to edge, like the home page. */
+.doc > .sheet {
+  align-self: start;
+  border-left: var(--line);
+}
+
+/* The piece's media. Its top-left corner sits on the title's bottom line and
+   stays there; a single image grows from that point to fill most of the screen. */
+.plate {
+  min-height: calc(100vh - var(--header-height));
+  padding: var(--title-bottom) var(--space-7) var(--space-7);
+  background: var(--well);
+  border-left: var(--line);
+}
+.plate .sheet {
+  padding: 0;
+}
+.plate > * + * {
+  margin-top: var(--space-5);
+}
+.frame :is(img, video, iframe) {
+  border-radius: var(--radius);
+}
+.frame img {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  /* Fits under the header, but stays a useful size in a short window. */
+  max-height: max(
+    var(--cell),
+    min(
+      var(--image-max),
+      calc(100vh - var(--header-height) - var(--title-bottom) - var(--space-7))
+    )
+  );
+}
+.frame :is(video, iframe) {
+  width: 100%;
+  max-width: var(--video-max);
+  aspect-ratio: 16 / 9;
+  background: var(--bg);
+}
+.frame audio {
+  width: 100%;
+  max-width: var(--audio-max);
+}
+
+/* Tablets and phones: one column. */
+@media (max-width: 900px) {
+  .doc {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .doc .side {
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+  }
+  /* Every mosaic and image sits one gutter from the edge, the same as the text. */
+  .sheet {
+    padding: var(--gutter);
+  }
+  .plate .sheet {
+    padding: 0;
+  }
+  /* The work comes before the title and text. */
+  .plate,
+  .doc > .sheet {
+    order: -1;
+    min-height: 0;
+    border-left: 0;
+    border-bottom: var(--line);
+  }
+  .plate {
+    padding: var(--gutter);
+  }
+  .frame img {
+    max-height: var(--image-max-stacked);
+  }
+  /* The footer has the contact links, so the About page does not repeat them. */
+  .doc.about dl {
+    display: none;
+  }
+}
+
+/* Phones: the mosaic is two cells wide. */
+@media (max-width: 560px) {
+  :root {
+    --gutter: var(--space-4);
+    --cell: 44vw;
+  }
+  .sheet {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

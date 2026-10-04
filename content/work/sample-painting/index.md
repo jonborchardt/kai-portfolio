@@ -1,7 +1,7 @@
 ---
 title: Sample Painting
 date: 2026-03
-type: art
+type: painting
 medium: Watercolor on paper
 media:
   - cover.png

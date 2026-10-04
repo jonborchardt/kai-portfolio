@@ -21,17 +21,10 @@ const { media, priority } = Astro.props;
   />
 )}
 {media.kind === "audio" && (
-  <audio
-    class="w-full"
-    controls
-    preload="metadata"
-    src={media.url}
-    aria-label={media.label}
-  />
+  <audio controls preload="metadata" src={media.url} aria-label={media.label} />
 )}
 {media.kind === "video" && (
   <video
-    class="w-full"
     controls
     playsinline
     preload="metadata"
@@ -41,7 +34,6 @@ const { media, priority } = Astro.props;
 )}
 {media.kind === "embed" && (
   <iframe
-    class="aspect-video w-full"
     src={media.url}
     title={media.label}
     loading="lazy"

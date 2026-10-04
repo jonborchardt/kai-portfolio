@@ -7,3 +7,4 @@ test-results/
 .DS_Store
 docs/superpowers
 .superpowers
+.playwright**

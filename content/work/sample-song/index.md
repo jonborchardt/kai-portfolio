@@ -1,10 +1,11 @@
 ---
 title: Sample Song
 date: 2026-01-15
-type: music
-medium: Piano
+type: marimba
+medium: Solo marimba
 media:
+  - cover.jpg
   - tone.wav
 ---
 
-A placeholder for a music piece. It has no image, so it appears as a text-only entry on the home page.
+A placeholder for a music piece: a cover image, then an audio file kept in the folder.

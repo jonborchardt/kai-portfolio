@@ -4,10 +4,19 @@ import { href } from "../lib/href";
 ---
 
 <Base title="Page not found">
-  <h1 class="mb-6 text-3xl font-bold">Page not found</h1>
-  <p>
-    <a class="underline" href={href("/")}>
-      Back to the work
-    </a>
-  </p>
+  <div class="doc">
+    <div class="side">
+      <h1>Page not found</h1>
+      <div class="prose prose-sm prose-invert">
+        <p>
+          That address has no page. It may have moved, or the link is wrong.
+        </p>
+      </div>
+      <nav class="pn" aria-label="Ways back">
+        <a href={href("/")}>
+          <span aria-hidden="true">↑ </span>Back to the work
+        </a>
+      </nav>
+    </div>
+  </div>
 </Base>

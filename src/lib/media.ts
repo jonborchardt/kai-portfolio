@@ -81,6 +81,15 @@ export function parseDate(value: unknown): Date | undefined {
     : undefined;
 }
 
+/**
+ * The `date` as it was typed in a piece's front matter (the block between the
+ * `---` lines); undefined when there is none, or nothing after `date:`.
+ */
+export function writtenDate(text: string): string | undefined {
+  const frontMatter = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text)?.[1] ?? "";
+  return /^date:[ \t]*["']?([^\s"']+)/m.exec(frontMatter)?.[1];
+}
+
 const monthYear = new Intl.DateTimeFormat("en-US", {
   month: "long",
   year: "numeric",
@@ -107,4 +116,29 @@ export function byNewest(a: Dated, b: Dated): number {
 /** A piece's folder name is its URL, so: lowercase letters, digits, single hyphens. */
 export function isValidPieceId(id: string): boolean {
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id);
+}
+
+/** The kinds of work, as written in a piece's `type` field, with the label shown on the site. */
+export const TYPES = {
+  painting: "Paintings",
+  drawing: "Drawings",
+  writing: "Writing",
+  marimba: "Marimba",
+} as const;
+
+export type WorkType = keyof typeof TYPES;
+
+/**
+ * How much of the mosaic a tile takes: every 11th tile is big, and the rest
+ * take one or two cells to suit the image's shape.
+ */
+export function tileShape(
+  index: number,
+  width?: number,
+  height?: number,
+): "big" | "wide" | "tall" | "" {
+  if (index % 11 === 0) return "big";
+  if (!width || !height) return "";
+  const ratio = width / height;
+  return ratio > 1.3 ? "wide" : ratio < 0.85 ? "tall" : "";
 }
